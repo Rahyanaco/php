@@ -67,7 +67,9 @@ php chat-completions/image-generation.php
 
 ## 🔌 WordPress Integration
 
-**File**: `chat-completions/WORDPRESS_INTEGRATION.md`
+**Files**: 
+- `chat-completions/WORDPRESS_INTEGRATION.md` (English)
+- `chat-completions/WORDPRESS_INTEGRATION.fa.md` (Farsi/Persian)
 
 Complete guide for integrating Rahyana image generation into WordPress:
 
