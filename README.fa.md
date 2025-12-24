@@ -65,7 +65,9 @@ php chat-completions/image-generation.php
 
 ## 🔌 ادغام وردپرس
 
-**فایل**: `chat-completions/WORDPRESS_INTEGRATION.md`
+**فایل‌ها**: 
+- `chat-completions/WORDPRESS_INTEGRATION.md` (انگلیسی)
+- `chat-completions/WORDPRESS_INTEGRATION.fa.md` (فارسی)
 
 راهنمای کامل برای ادغام تولید تصویر Rahyana در وردپرس:
 

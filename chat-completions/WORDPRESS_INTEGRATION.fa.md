@@ -1,45 +1,45 @@
-# WordPress Integration Guide - Rahyana Image Generation
+# راهنمای ادغام وردپرس - تولید تصویر Rahyana
 
-This guide explains how to integrate Rahyana AI image generation into your WordPress plugin or theme.
+این راهنما نحوه ادغام تولید تصویر Rahyana AI را در افزونه یا قالب وردپرس شما توضیح می‌دهد.
 
-## Table of Contents
+## فهرست مطالب
 
-1. [Overview](#overview)
-2. [Prerequisites](#prerequisites)
-3. [Basic Integration](#basic-integration)
-4. [Creating a WordPress Plugin](#creating-a-wordpress-plugin)
-5. [Creating a WordPress Shortcode](#creating-a-wordpress-shortcode)
-6. [Creating a WordPress Block (Gutenberg)](#creating-a-wordpress-block-gutenberg)
-7. [Security Best Practices](#security-best-practices)
-8. [Error Handling](#error-handling)
-9. [Caching](#caching)
-10. [Complete Example Plugin](#complete-example-plugin)
+1. [نمای کلی](#نمای-کلی)
+2. [پیش‌نیازها](#پیشنیازها)
+3. [ادغام پایه](#ادغام-پایه)
+4. [ایجاد افزونه وردپرس](#ایجاد-افزونه-وردپرس)
+5. [ایجاد شورتکد وردپرس](#ایجاد-شورتکد-وردپرس)
+6. [ایجاد بلاک وردپرس (گوتنبرگ)](#ایجاد-بلاک-وردپرس-گوتنبرگ)
+7. [بهترین روش‌های امنیتی](#بهترین-روشهای-امنیتی)
+8. [مدیریت خطا](#مدیریت-خطا)
+9. [کش](#کش)
+10. [افزونه نمونه کامل](#افزونه-نمونه-کامل)
 
-## Overview
+## نمای کلی
 
-This guide shows you how to use the Rahyana API to generate images in WordPress. You can integrate it as:
-- A standalone plugin
-- A shortcode for use in posts/pages
-- A Gutenberg block
-- A theme function
+این راهنما نحوه استفاده از Rahyana API برای تولید تصویر در وردپرس را نشان می‌دهد. می‌توانید آن را به صورت زیر ادغام کنید:
+- یک افزونه مستقل
+- یک شورتکد برای استفاده در پست‌ها/صفحات
+- یک بلاک گوتنبرگ
+- یک تابع قالب
 
-## Prerequisites
+## پیش‌نیازها
 
-- WordPress 5.0 or higher
-- PHP 7.4 or higher
-- cURL extension enabled
-- A Rahyana API key (get one at [rahyana.ir](https://rahyana.ir))
+- وردپرس 5.0 یا بالاتر
+- PHP 7.4 یا بالاتر
+- افزونه cURL فعال
+- کلید API Rahyana (از [rahyana.ir](https://rahyana.ir) دریافت کنید)
 
-## Basic Integration
+## ادغام پایه
 
-### Step 1: Create the Image Generation Class
+### مرحله 1: ایجاد کلاس تولید تصویر
 
-Create a file `class-rahyana-image-generator.php`:
+یک فایل `class-rahyana-image-generator.php` ایجاد کنید:
 
 ```php
 <?php
 /**
- * Rahyana Image Generator Class
+ * کلاس تولید تصویر Rahyana
  */
 class Rahyana_Image_Generator {
     
@@ -51,11 +51,11 @@ class Rahyana_Image_Generator {
     }
     
     /**
-     * Generate an image using Rahyana API
+     * تولید تصویر با استفاده از Rahyana API
      * 
-     * @param string $prompt The image generation prompt
-     * @param string $model The model to use (default: google/gemini-2.5-flash-image)
-     * @return array|WP_Error Returns array with 'success', 'image_url', 'image_data' or WP_Error on failure
+     * @param string $prompt متن تولید تصویر
+     * @param string $model مدل استفاده (پیش‌فرض: google/gemini-3-pro-image-preview)
+     * @return array|WP_Error آرایه با 'success', 'image_url', 'image_data' یا WP_Error در صورت خطا
      */
     public function generate_image($prompt, $model = 'google/gemini-3-pro-image-preview') {
         $url = $this->api_endpoint . '/chat/completions';
@@ -90,25 +90,25 @@ class Rahyana_Image_Generator {
         if ($status_code !== 200) {
             return new WP_Error(
                 'api_error',
-                'API request failed: ' . $status_code,
+                'درخواست API ناموفق: ' . $status_code,
                 ['status' => $status_code, 'body' => $body]
             );
         }
         
         $result = json_decode($body, true);
         
-        // Extract image from response
+        // استخراج تصویر از پاسخ
         $image_data_url = $this->extract_image_from_response($result);
         
         if (!$image_data_url) {
             return new WP_Error(
                 'no_image',
-                'No image found in API response',
+                'هیچ تصویری در پاسخ API یافت نشد',
                 ['response' => $result]
             );
         }
         
-        // Save image to WordPress media library
+        // ذخیره تصویر در کتابخانه رسانه وردپرس
         $attachment_id = $this->save_image_to_media_library($image_data_url, $prompt);
         
         if (is_wp_error($attachment_id)) {
@@ -126,18 +126,18 @@ class Rahyana_Image_Generator {
     }
     
     /**
-     * Extract image data URL from API response
+     * استخراج URL داده تصویر از پاسخ API
      */
     private function extract_image_from_response($response_data) {
         $image_data_url = null;
         
-        // Check providerResponse first
+        // ابتدا providerResponse را بررسی کنید
         if (isset($response_data['providerResponse']['choices'][0]['message'])) {
             $message = $response_data['providerResponse']['choices'][0]['message'];
             $image_data_url = $this->extract_image_from_message($message);
         }
         
-        // Fallback to top-level choices
+        // بازگشت به choices سطح بالا
         if (!$image_data_url && isset($response_data['choices'][0]['message'])) {
             $message = $response_data['choices'][0]['message'];
             $image_data_url = $this->extract_image_from_message($message);
@@ -147,14 +147,14 @@ class Rahyana_Image_Generator {
     }
     
     /**
-     * Extract image from message object
+     * استخراج تصویر از شیء پیام
      */
     private function extract_image_from_message($message) {
         if (!$message) {
             return null;
         }
         
-        // Check for images array (Gemini format)
+        // بررسی آرایه images (فرمت Gemini)
         if (isset($message['images']) && is_array($message['images']) && count($message['images']) > 0) {
             $imageItem = $message['images'][0];
             if (isset($imageItem['type']) && 
@@ -167,7 +167,7 @@ class Rahyana_Image_Generator {
             }
         }
         
-        // Check content field
+        // بررسی فیلد content
         if (isset($message['content'])) {
             if (is_array($message['content'])) {
                 foreach ($message['content'] as $item) {
@@ -191,32 +191,32 @@ class Rahyana_Image_Generator {
     }
     
     /**
-     * Save image to WordPress media library
+     * ذخیره تصویر در کتابخانه رسانه وردپرس
      */
     private function save_image_to_media_library($data_url, $prompt) {
-        // Extract base64 data
+        // استخراج داده base64
         if (!preg_match('/^data:image\/([a-zA-Z0-9]+);base64,(.+)$/', $data_url, $matches)) {
-            return new WP_Error('invalid_format', 'Invalid data URL format');
+            return new WP_Error('invalid_format', 'فرمت URL داده نامعتبر است');
         }
         
         $format = $matches[1];
         $image_data = base64_decode($matches[2]);
         
         if ($image_data === false) {
-            return new WP_Error('decode_failed', 'Failed to decode base64 image data');
+            return new WP_Error('decode_failed', 'رمزگشایی داده تصویر base64 ناموفق بود');
         }
         
-        // Create filename
+        // ایجاد نام فایل
         $filename = sanitize_file_name('rahyana-' . substr(md5($prompt), 0, 8) . '-' . time() . '.' . $format);
         $upload_dir = wp_upload_dir();
         $file_path = $upload_dir['path'] . '/' . $filename;
         
-        // Save file
+        // ذخیره فایل
         if (file_put_contents($file_path, $image_data) === false) {
-            return new WP_Error('save_failed', 'Failed to save image file');
+            return new WP_Error('save_failed', 'ذخیره فایل تصویر ناموفق بود');
         }
         
-        // Prepare attachment data
+        // آماده‌سازی داده ضمیمه
         $file_type = wp_check_filetype($filename, null);
         $attachment = [
             'post_mime_type' => $file_type['type'],
@@ -225,7 +225,7 @@ class Rahyana_Image_Generator {
             'post_status' => 'inherit'
         ];
         
-        // Insert attachment
+        // درج ضمیمه
         $attachment_id = wp_insert_attachment($attachment, $file_path);
         
         if (is_wp_error($attachment_id)) {
@@ -233,7 +233,7 @@ class Rahyana_Image_Generator {
             return $attachment_id;
         }
         
-        // Generate attachment metadata
+        // تولید متادیتای ضمیمه
         require_once(ABSPATH . 'wp-admin/includes/image.php');
         $attach_data = wp_generate_attachment_metadata($attachment_id, $file_path);
         wp_update_attachment_metadata($attachment_id, $attach_data);
@@ -243,15 +243,15 @@ class Rahyana_Image_Generator {
 }
 ```
 
-## Creating a WordPress Plugin
+## ایجاد افزونه وردپرس
 
-### Step 1: Create Plugin Structure
+### مرحله 1: ایجاد ساختار افزونه
 
-Create a directory `rahyana-image-generator` in `wp-content/plugins/` with the following structure:
+یک پوشه `rahyana-image-generator` در `wp-content/plugins/` با ساختار زیر ایجاد کنید:
 
 ```
 rahyana-image-generator/
-├── rahyana-image-generator.php (main plugin file)
+├── rahyana-image-generator.php (فایل اصلی افزونه)
 ├── class-rahyana-image-generator.php
 ├── admin/
 │   └── settings.php
@@ -259,16 +259,16 @@ rahyana-image-generator/
     └── shortcode.php
 ```
 
-### Step 2: Main Plugin File
+### مرحله 2: فایل اصلی افزونه
 
-Create `rahyana-image-generator.php`:
+فایل `rahyana-image-generator.php` را ایجاد کنید:
 
 ```php
 <?php
 /**
  * Plugin Name: Rahyana Image Generator
  * Plugin URI: https://github.com/your-repo/rahyana-image-generator
- * Description: Generate images using Rahyana AI API
+ * Description: تولید تصویر با استفاده از Rahyana AI API
  * Version: 1.0.0
  * Author: Your Name
  * Author URI: https://yourwebsite.com
@@ -277,57 +277,57 @@ Create `rahyana-image-generator.php`:
  * Text Domain: rahyana-image-generator
  */
 
-// Exit if accessed directly
+// خروج در صورت دسترسی مستقیم
 if (!defined('ABSPATH')) {
     exit;
 }
 
-// Define plugin constants
+// تعریف ثابت‌های افزونه
 define('RAHYANA_IMAGE_GENERATOR_VERSION', '1.0.0');
 define('RAHYANA_IMAGE_GENERATOR_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('RAHYANA_IMAGE_GENERATOR_PLUGIN_URL', plugin_dir_url(__FILE__));
 
-// Include required files
+// شامل کردن فایل‌های مورد نیاز
 require_once RAHYANA_IMAGE_GENERATOR_PLUGIN_DIR . 'class-rahyana-image-generator.php';
 require_once RAHYANA_IMAGE_GENERATOR_PLUGIN_DIR . 'includes/shortcode.php';
 
-// Initialize plugin
+// مقداردهی اولیه افزونه
 add_action('plugins_loaded', 'rahyana_image_generator_init');
 
 function rahyana_image_generator_init() {
-    // Load admin settings if in admin
+    // بارگذاری تنظیمات ادمین در صورت بودن در ادمین
     if (is_admin()) {
         require_once RAHYANA_IMAGE_GENERATOR_PLUGIN_DIR . 'admin/settings.php';
     }
 }
 
-// Register activation hook
+// ثبت هوک فعال‌سازی
 register_activation_hook(__FILE__, 'rahyana_image_generator_activate');
 
 function rahyana_image_generator_activate() {
-    // Set default options
+    // تنظیم گزینه‌های پیش‌فرض
     add_option('rahyana_api_key', '');
     add_option('rahyana_default_model', 'google/gemini-3-pro-image-preview');
 }
 ```
 
-### Step 3: Admin Settings
+### مرحله 3: تنظیمات ادمین
 
-Create `admin/settings.php`:
+فایل `admin/settings.php` را ایجاد کنید:
 
 ```php
 <?php
-// Exit if accessed directly
+// خروج در صورت دسترسی مستقیم
 if (!defined('ABSPATH')) {
     exit;
 }
 
-// Add settings menu
+// افزودن منوی تنظیمات
 add_action('admin_menu', 'rahyana_image_generator_settings_menu');
 
 function rahyana_image_generator_settings_menu() {
     add_options_page(
-        'Rahyana Image Generator Settings',
+        'تنظیمات Rahyana Image Generator',
         'Rahyana Image Generator',
         'manage_options',
         'rahyana-image-generator',
@@ -335,7 +335,7 @@ function rahyana_image_generator_settings_menu() {
     );
 }
 
-// Register settings
+// ثبت تنظیمات
 add_action('admin_init', 'rahyana_image_generator_register_settings');
 
 function rahyana_image_generator_register_settings() {
@@ -343,7 +343,7 @@ function rahyana_image_generator_register_settings() {
     register_setting('rahyana_image_generator_settings', 'rahyana_default_model');
 }
 
-// Settings page
+// صفحه تنظیمات
 function rahyana_image_generator_settings_page() {
     if (!current_user_can('manage_options')) {
         return;
@@ -353,20 +353,20 @@ function rahyana_image_generator_settings_page() {
         check_admin_referer('rahyana_image_generator_settings');
         update_option('rahyana_api_key', sanitize_text_field($_POST['rahyana_api_key']));
         update_option('rahyana_default_model', sanitize_text_field($_POST['rahyana_default_model']));
-        echo '<div class="notice notice-success"><p>Settings saved!</p></div>';
+        echo '<div class="notice notice-success"><p>تنظیمات ذخیره شد!</p></div>';
     }
     
     $api_key = get_option('rahyana_api_key', '');
     $default_model = get_option('rahyana_default_model', 'google/gemini-3-pro-image-preview');
     ?>
     <div class="wrap">
-        <h1>Rahyana Image Generator Settings</h1>
+        <h1>تنظیمات Rahyana Image Generator</h1>
         <form method="post" action="">
             <?php wp_nonce_field('rahyana_image_generator_settings'); ?>
             <table class="form-table">
                 <tr>
                     <th scope="row">
-                        <label for="rahyana_api_key">API Key</label>
+                        <label for="rahyana_api_key">کلید API</label>
                     </th>
                     <td>
                         <input type="text" 
@@ -374,12 +374,12 @@ function rahyana_image_generator_settings_page() {
                                name="rahyana_api_key" 
                                value="<?php echo esc_attr($api_key); ?>" 
                                class="regular-text" />
-                        <p class="description">Get your API key from <a href="https://rahyana.ir" target="_blank">rahyana.ir</a></p>
+                        <p class="description">کلید API خود را از <a href="https://rahyana.ir" target="_blank">rahyana.ir</a> دریافت کنید</p>
                     </td>
                 </tr>
                 <tr>
                     <th scope="row">
-                        <label for="rahyana_default_model">Default Model</label>
+                        <label for="rahyana_default_model">مدل پیش‌فرض</label>
                     </th>
                     <td>
                         <input type="text" 
@@ -387,7 +387,7 @@ function rahyana_image_generator_settings_page() {
                                name="rahyana_default_model" 
                                value="<?php echo esc_attr($default_model); ?>" 
                                class="regular-text" />
-                        <p class="description">Default model for image generation (e.g., google/gemini-3-pro-image-preview)</p>
+                        <p class="description">مدل پیش‌فرض برای تولید تصویر (مثلاً: google/gemini-3-pro-image-preview)</p>
                     </td>
                 </tr>
             </table>
@@ -398,18 +398,18 @@ function rahyana_image_generator_settings_page() {
 }
 ```
 
-## Creating a WordPress Shortcode
+## ایجاد شورتکد وردپرس
 
-Create `includes/shortcode.php`:
+فایل `includes/shortcode.php` را ایجاد کنید:
 
 ```php
 <?php
-// Exit if accessed directly
+// خروج در صورت دسترسی مستقیم
 if (!defined('ABSPATH')) {
     exit;
 }
 
-// Register shortcode
+// ثبت شورتکد
 add_shortcode('rahyana_image', 'rahyana_image_generator_shortcode');
 
 function rahyana_image_generator_shortcode($atts) {
@@ -422,14 +422,14 @@ function rahyana_image_generator_shortcode($atts) {
     
     $api_key = get_option('rahyana_api_key');
     if (empty($api_key)) {
-        return '<p class="rahyana-error">Error: API key not configured. Please configure it in Settings > Rahyana Image Generator.</p>';
+        return '<p class="rahyana-error">خطا: کلید API پیکربندی نشده است. لطفاً آن را در Settings > Rahyana Image Generator پیکربندی کنید.</p>';
     }
     
     $generator = new Rahyana_Image_Generator($api_key);
     $result = $generator->generate_image($atts['prompt'], $atts['model']);
     
     if (is_wp_error($result)) {
-        return '<p class="rahyana-error">Error: ' . esc_html($result->get_error_message()) . '</p>';
+        return '<p class="rahyana-error">خطا: ' . esc_html($result->get_error_message()) . '</p>';
     }
     
     $size_class = 'size-' . esc_attr($atts['size']);
@@ -444,17 +444,17 @@ function rahyana_image_generator_shortcode($atts) {
 }
 ```
 
-### Usage
+### استفاده
 
-Add the shortcode to any post or page:
+شورتکد را به هر پست یا صفحه اضافه کنید:
 
 ```
 [rahyana_image prompt="a dog in a city" size="large"]
 ```
 
-## Creating a WordPress Block (Gutenberg)
+## ایجاد بلاک وردپرس (گوتنبرگ)
 
-For Gutenberg block integration, you'll need to create a React component. Here's a basic example:
+برای ادغام بلاک گوتنبرگ، باید یک کامپوننت React ایجاد کنید. در اینجا یک نمونه پایه آورده شده است:
 
 ```javascript
 // block.js
@@ -501,7 +501,7 @@ registerBlockType('rahyana/image-generator', {
                 if (data.success) {
                     setAttributes({ imageUrl: data.image_url });
                 } else {
-                    setError(data.message || 'Failed to generate image');
+                    setError(data.message || 'تولید تصویر ناموفق بود');
                 }
             } catch (err) {
                 setError(err.message);
@@ -513,7 +513,7 @@ registerBlockType('rahyana/image-generator', {
         return (
             <div className="rahyana-image-generator-block">
                 <TextControl
-                    label="Image Prompt"
+                    label="متن تصویر"
                     value={attributes.prompt}
                     onChange={(value) => setAttributes({ prompt: value })}
                 />
@@ -522,7 +522,7 @@ registerBlockType('rahyana/image-generator', {
                     onClick={generateImage}
                     disabled={loading}
                 >
-                    {loading ? 'Generating...' : 'Generate Image'}
+                    {loading ? 'در حال تولید...' : 'تولید تصویر'}
                 </Button>
                 {error && <p className="error">{error}</p>}
                 {attributes.imageUrl && (
@@ -540,47 +540,47 @@ registerBlockType('rahyana/image-generator', {
 });
 ```
 
-## Security Best Practices
+## بهترین روش‌های امنیتی
 
-1. **Never expose API keys in frontend code**
-   - Store API keys in WordPress options (database)
-   - Use WordPress nonces for AJAX requests
-   - Validate user permissions
+1. **هرگز کلیدهای API را در کد frontend افشا نکنید**
+   - کلیدهای API را در گزینه‌های وردپرس (پایگاه داده) ذخیره کنید
+   - از nonceهای وردپرس برای درخواست‌های AJAX استفاده کنید
+   - مجوزهای کاربر را اعتبارسنجی کنید
 
-2. **Sanitize and validate inputs**
+2. **ورودی‌ها را sanitize و اعتبارسنجی کنید**
    ```php
    $prompt = sanitize_text_field($_POST['prompt']);
    $model = sanitize_text_field($_POST['model']);
    ```
 
-3. **Use WordPress HTTP API**
-   - Use `wp_remote_post()` instead of direct cURL
-   - WordPress handles SSL verification automatically
+3. **از WordPress HTTP API استفاده کنید**
+   - از `wp_remote_post()` به جای cURL مستقیم استفاده کنید
+   - وردپرس به طور خودکار تأیید SSL را مدیریت می‌کند
 
-4. **Rate limiting**
-   - Implement rate limiting to prevent abuse
-   - Cache generated images
+4. **محدودسازی نرخ**
+   - محدودسازی نرخ را برای جلوگیری از سوء استفاده پیاده‌سازی کنید
+   - تصاویر تولید شده را کش کنید
 
-## Error Handling
+## مدیریت خطا
 
-Always handle errors gracefully:
+همیشه خطاها را به صورت مناسب مدیریت کنید:
 
 ```php
 $result = $generator->generate_image($prompt);
 
 if (is_wp_error($result)) {
-    error_log('Rahyana Image Generation Error: ' . $result->get_error_message());
-    // Show user-friendly error message
-    return '<p>Sorry, image generation failed. Please try again later.</p>';
+    error_log('خطای تولید تصویر Rahyana: ' . $result->get_error_message());
+    // نمایش پیام خطای کاربرپسند
+    return '<p>متأسفانه، تولید تصویر ناموفق بود. لطفاً بعداً دوباره تلاش کنید.</p>';
 }
 ```
 
-## Caching
+## کش
 
-Cache generated images to reduce API calls:
+تصاویر تولید شده را برای کاهش درخواست‌های API کش کنید:
 
 ```php
-// Check cache first
+// ابتدا کش را بررسی کنید
 $cache_key = 'rahyana_image_' . md5($prompt);
 $cached_image = get_transient($cache_key);
 
@@ -588,10 +588,10 @@ if ($cached_image !== false) {
     return $cached_image;
 }
 
-// Generate new image
+// تولید تصویر جدید
 $result = $generator->generate_image($prompt);
 
-// Cache for 24 hours
+// کش برای 24 ساعت
 if ($result['success']) {
     set_transient($cache_key, $result['image_url'], DAY_IN_SECONDS);
 }
@@ -599,27 +599,27 @@ if ($result['success']) {
 return $result;
 ```
 
-## Complete Example Plugin
+## افزونه نمونه کامل
 
-For a complete, production-ready plugin, see the example files in this directory. The plugin includes:
+برای یک افزونه کامل و آماده تولید، فایل‌های نمونه در این پوشه را ببینید. افزونه شامل موارد زیر است:
 
-- ✅ Admin settings page
-- ✅ Shortcode support
-- ✅ Error handling
-- ✅ Image caching
-- ✅ Security best practices
-- ✅ WordPress coding standards
+- ✅ صفحه تنظیمات ادمین
+- ✅ پشتیبانی از شورتکد
+- ✅ مدیریت خطا
+- ✅ کش تصویر
+- ✅ بهترین روش‌های امنیتی
+- ✅ استانداردهای کدنویسی وردپرس
 
-## Additional Resources
+## منابع اضافی
 
-- [Rahyana API Documentation](https://rahyana.ir/docs)
-- [WordPress Plugin Handbook](https://developer.wordpress.org/plugins/)
+- [مستندات Rahyana API](https://rahyana.ir/docs)
+- [راهنمای افزونه وردپرس](https://developer.wordpress.org/plugins/)
 - [WordPress HTTP API](https://developer.wordpress.org/plugins/http-api/)
 
-## Support
+## پشتیبانی
 
-For issues or questions:
-- GitHub Issues: [Your Repository URL]
-- Email: support@yourdomain.com
-- Documentation: [Your Documentation URL]
+برای مشکلات یا سوالات:
+- GitHub Issues: [آدرس مخزن شما]
+- ایمیل: support@yourdomain.com
+- مستندات: [آدرس مستندات شما]
 
