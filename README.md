@@ -10,7 +10,9 @@ This directory contains PHP examples for using the Rahyana AI API. These example
 php/
 ├── chat-completions/
 │   ├── image-generation.php      # Image generation example
-│   └── WORDPRESS_INTEGRATION.md   # WordPress integration guide
+│   ├── image-editing.php         # Image editing/modification example
+│   ├── WORDPRESS_INTEGRATION.md   # WordPress integration guide (English)
+│   └── WORDPRESS_INTEGRATION.fa.md # WordPress integration guide (Farsi)
 ├── completions/
 └── models/
 ```
@@ -21,6 +23,7 @@ php/
 
 - PHP 7.4 or higher
 - cURL extension enabled
+- GD extension enabled (required for image editing script)
 - A Rahyana API key (get one at [rahyana.ir](https://rahyana.ir))
 
 ### Basic Usage
@@ -65,6 +68,45 @@ php chat-completions/image-generation.php
 - Model: `google/gemini-3-pro-image-preview` (configurable in script)
 - Prompt: `"a dog in a city"` (configurable in script)
 
+### Image Editing
+
+**File**: `chat-completions/image-editing.php`
+
+Edit and modify existing images using the Rahyana API. This example:
+- Accepts an image file as input
+- Sends the image to the API with modification instructions
+- Automatically resizes large images to meet API size limits
+- Saves the edited/modified image to a local directory
+
+**Usage**:
+```bash
+# Basic usage
+export API_KEY_OVERRIDE="your_api_key_here"
+php chat-completions/image-editing.php input.jpg "make it look like a painting"
+
+# More examples
+php chat-completions/image-editing.php photo.png "add a sunset in the background"
+php chat-completions/image-editing.php image.jpg "remove the background"
+php chat-completions/image-editing.php picture.png "enhance colors and contrast"
+
+# Set custom output directory
+export OUTPUT_DIR="/path/to/output"
+php chat-completions/image-editing.php input.jpg "make it vintage style"
+```
+
+**Features**:
+- Automatic image resizing for large files (API size limits)
+- Supports JPEG, PNG, GIF, WebP formats
+- Maintains aspect ratio during resizing
+- Base64 encoding for API transmission
+- Comprehensive error handling
+
+**Configuration**:
+- `API_KEY_OVERRIDE`: Your Rahyana API key (environment variable)
+- `OUTPUT_DIR`: Directory to save edited images (defaults to `./edited-images`)
+- Model: `google/gemini-3-pro-image-preview` (configurable in script)
+- Modification prompt: Provided as command-line argument
+
 ## 🔌 WordPress Integration
 
 **Files**: 
@@ -100,6 +142,16 @@ Complete guide for integrating Rahyana image generation into WordPress:
 - ✅ Automatic directory creation
 - ✅ Comprehensive error handling
 - ✅ Command-line interface
+
+### Image Editing Script
+
+- ✅ Accepts image files as input
+- ✅ Automatic image resizing for large files
+- ✅ Multiple image format support (JPEG, PNG, GIF, WebP)
+- ✅ Base64 encoding for API transmission
+- ✅ Image modification with custom prompts
+- ✅ Preserves aspect ratio during resizing
+- ✅ Temporary file cleanup
 
 ### WordPress Integration
 
