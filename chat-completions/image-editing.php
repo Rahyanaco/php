@@ -19,8 +19,8 @@
  */
 
 // Configuration
-$API_KEY = getenv('API_KEY_OVERRIDE') ?: 'rhy_S_PJPvCubJc7jv2QVBCJBWqGCD8lvRUSZls3J8hC7dA';
-$API_ENDPOINT = 'localhost:3000';
+$API_KEY = getenv('API_KEY_OVERRIDE') ?: 'YOUR_API_KEY_HERE';
+$API_ENDPOINT = 'rahyana.ir';
 $MODEL = 'google/gemini-3-pro-image-preview';
 $OUTPUT_DIR = getenv('OUTPUT_DIR') ?: __DIR__ . '/edited-images';
 
@@ -215,7 +215,7 @@ function saveImageFromDataUrl($dataUrl, $outputPath) {
 function makeRequest($data) {
     global $API_KEY, $API_ENDPOINT;
     
-    $url = "http://$API_ENDPOINT/api/v1/chat/completions";
+    $url = "https://$API_ENDPOINT/api/v1/chat/completions";
     $postData = json_encode($data);
     
     $ch = curl_init();
